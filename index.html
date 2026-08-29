@@ -151,13 +151,13 @@
 
   .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .price { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px 22px; }
-  .price.hot { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
   .price h3 { margin: 0 0 4px; font-size: 17px; }
   .price .amount { font-size: 24px; font-weight: 800; margin: 10px 0 6px; }
   .price .amount span { font-size: 13px; font-weight: 400; color: var(--muted); }
   .price ul { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid var(--border); }
   .price li { display: flex; gap: 8px; font-size: 13px; color: var(--muted); padding: 4px 0; }
   .price li svg { color: var(--accent); flex: none; margin-top: 3px; }
+  .price .btn { width: 100%; justify-content: center; margin-top: 16px; }
 
   /* tools */
   .toolbox { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
@@ -379,8 +379,9 @@
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>模板批量生成文档</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>1-3 天交付</li>
         </ul>
+        <button class="btn btn-ghost" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">选这个，微信咨询</button>
       </div>
-      <div class="price hot">
+      <div class="price">
         <h3>中等项目</h3>
         <div class="amount">800 - 3000 <span>元</span></div>
         <p style="font-size:13px;color:var(--muted);margin:0">需要多个环节或在线化的工具</p>
@@ -390,6 +391,7 @@
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>数据采集整理管道</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>3-7 天交付</li>
         </ul>
+        <button class="btn btn-ghost" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">选这个，微信咨询</button>
       </div>
       <div class="price">
         <h3>复杂定制</h3>
@@ -400,6 +402,7 @@
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>完整工具站 / 后台</li>
           <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>按周拆分里程碑交付</li>
         </ul>
+        <button class="btn btn-ghost" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">选这个，微信咨询</button>
       </div>
     </div>
   </div>
