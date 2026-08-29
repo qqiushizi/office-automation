@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>自动化办公定制 - 把重复的活儿交给脚本</title>
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --border: #e3e5ea;
+    --text: #1a1d22;
+    --muted: #626a75;
+    --accent: #0e8a5f;
+    --accent-strong: #0a6b49;
+    --accent-soft: #e7f4ee;
+    --warn: #a85a0a;
+    --warn-soft: #fdf1df;
+    --danger: #c0392b;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  /* nav */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,.86);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1080px; margin: 0 auto; padding: 0 24px;
+    height: 58px; display: flex; align-items: center; gap: 28px;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; }
+  .brand-mark {
+    width: 30px; height: 30px; border-radius: 8px; flex: none;
+    background: var(--accent); color: #fff;
+    display: grid; place-items: center;
+  }
+  .nav-links { display: flex; gap: 22px; margin-left: auto; font-size: 14px; color: var(--muted); }
+  .nav-links a:hover { color: var(--text); }
+  .nav-cta {
+    background: var(--text); color: #fff; font-size: 14px;
+    padding: 8px 16px; border-radius: 8px; border: 0; cursor: pointer;
+  }
+
+  /* hero */
+  .hero { padding: 72px 0 64px; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px;
+    align-items: center;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--accent); font-weight: 600;
+    background: var(--accent-soft); padding: 6px 12px; border-radius: 999px;
+  }
+  .hero h1 {
+    font-size: clamp(28px, 4.2vw, 40px);
+    line-height: 1.25; margin: 20px 0 14px; letter-spacing: 0;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p.lead { color: var(--muted); font-size: 16px; max-width: 46ch; margin: 0 0 26px; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 11px 20px; border-radius: 8px; font-size: 15px;
+    border: 1px solid transparent; cursor: pointer; transition: background .15s;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-strong); }
+  .btn-ghost { background: var(--surface); border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--text); }
+  .btn-sm { padding: 7px 13px; font-size: 13px; }
+
+  .hero-trust { display: flex; gap: 26px; margin-top: 30px; flex-wrap: wrap; }
+  .hero-trust div { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .hero-trust svg { color: var(--accent); flex: none; }
+
+  .demo-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; box-shadow: 0 12px 32px rgba(20,30,40,.06);
+  }
+  .demo-panel h3 { margin: 0 0 4px; font-size: 15px; }
+  .demo-panel .sub { margin: 0 0 14px; font-size: 13px; color: var(--muted); }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+  .field textarea, .field input {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 11px; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: #fbfbfc; color: var(--text); resize: vertical;
+  }
+  .field textarea:focus, .field input:focus { outline: 2px solid var(--accent-soft); border-color: var(--accent); }
+  .demo-out {
+    background: #0f1115; color: #d7dce2; border-radius: 8px;
+    padding: 12px 14px; font-size: 12px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    min-height: 120px; max-height: 200px; overflow: auto; white-space: pre; margin-top: 12px;
+  }
+
+  /* sections */
+  section { padding: 64px 0; }
+  section.alt { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .sec-head { max-width: 640px; margin-bottom: 34px; }
+  .sec-head .kicker { font-size: 13px; color: var(--accent); font-weight: 700; margin-bottom: 6px; }
+  .sec-head h2 { font-size: 26px; line-height: 1.3; margin: 0 0 10px; letter-spacing: 0; }
+  .sec-head p { color: var(--muted); margin: 0; font-size: 15px; }
+
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 22px;
+  }
+  .card .ic {
+    width: 38px; height: 38px; border-radius: 8px; background: var(--accent-soft); color: var(--accent);
+    display: grid; place-items: center; margin-bottom: 14px;
+  }
+  .card h3 { margin: 0 0 8px; font-size: 16px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+  .card .tag { display: inline-block; margin-top: 12px; font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  .audience { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .aud {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 16px 14px; text-align: center;
+  }
+  .aud .ic { width: 34px; height: 34px; margin: 0 auto 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+  .aud b { display: block; font-size: 14px; }
+  .aud span { font-size: 12px; color: var(--muted); }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; counter-reset: step; }
+  .step { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 18px 18px 20px; }
+  .step::before {
+    counter-increment: step; content: counter(step, decimal-leading-zero);
+    font-size: 26px; font-weight: 800; color: var(--accent); display: block; margin-bottom: 12px;
+  }
+  .step h3 { font-size: 15px; margin: 0 0 6px; }
+  .step p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  .pricing { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .price { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 24px 22px; }
+  .price.hot { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .price h3 { margin: 0 0 4px; font-size: 17px; }
+  .price .amount { font-size: 24px; font-weight: 800; margin: 10px 0 6px; }
+  .price .amount span { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .price ul { list-style: none; margin: 12px 0 0; padding: 12px 0 0; border-top: 1px solid var(--border); }
+  .price li { display: flex; gap: 8px; font-size: 13px; color: var(--muted); padding: 4px 0; }
+  .price li svg { color: var(--accent); flex: none; margin-top: 3px; }
+
+  /* tools */
+  .toolbox { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .tabs { display: flex; border-bottom: 1px solid var(--border); background: #fafbfc; overflow-x: auto; }
+  .tab {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 13px 18px; font-size: 14px; color: var(--muted); cursor: pointer;
+    border: 0; background: none; border-bottom: 2px solid transparent; white-space: nowrap;
+  }
+  .tab[aria-selected="true"] { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+  .tab-panel { display: none; padding: 24px; }
+  .tab-panel.active { display: block; }
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .tool-desc { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .tool-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .result-box {
+    border: 1px solid var(--border); border-radius: 8px; padding: 14px;
+    font-size: 13px; min-height: 160px; max-height: 320px; overflow: auto;
+    background: #fbfbfc; margin-top: 12px;
+  }
+  .result-box table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .result-box th, .result-box td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; white-space: nowrap; }
+  .result-box th { background: #f1f2f4; }
+  .result-box .empty { color: var(--muted); }
+  .count-line { font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .warn-line { font-size: 12px; color: var(--warn); margin-top: 8px; }
+  select { border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 13px; background: #fbfbfc; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+  /* contact */
+  .contact-band {
+    background: var(--text); color: #fff; border-radius: 12px;
+    padding: 40px; display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap;
+  }
+  .contact-band h2 { margin: 0 0 8px; font-size: 24px; letter-spacing: 0; }
+  .contact-band p { margin: 0; color: #b9c0c9; font-size: 14px; }
+  .contact-band .btn-primary { background: #fff; color: var(--text); }
+  .contact-band .btn-primary:hover { background: #eef0f2; }
+  .contact-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: #d7dce2; }
+
+  footer { padding: 28px 0 40px; color: var(--muted); font-size: 12px; text-align: center; }
+
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 32px; }
+    .cards { grid-template-columns: 1fr 1fr; }
+    .audience { grid-template-columns: repeat(3, 1fr); }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .pricing { grid-template-columns: 1fr; }
+    .tool-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+  }
+  @media (max-width: 560px) {
+    .cards { grid-template-columns: 1fr; }
+    .audience { grid-template-columns: repeat(2, 1fr); }
+    .steps { grid-template-columns: 1fr; }
+    .hero { padding: 48px 0 40px; }
+    section { padding: 48px 0; }
+    .tab { padding: 11px 10px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="brand-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg>
+      </span>
+      自动化办公定制
+    </div>
+    <div class="nav-links">
+      <a href="#services">服务</a>
+      <a href="#process">流程</a>
+      <a href="#pricing">价格</a>
+      <a href="#tools">演示工具</a>
+    </div>
+    <button class="nav-cta" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">找我做</button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+        自动化办公 · 脚本定制
+      </span>
+      <h1>把重复的活儿交给脚本，<em>把时间还给自己</em></h1>
+      <p class="lead">Excel 批量处理、网页信息采集、企业微信机器人、文档模板批量生成。你说需求，我交付能用的工具，先验收后付款。</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary" onclick="document.querySelector('#tools').scrollIntoView({behavior:'smooth'})">
+          先试演示工具
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">聊聊需求</button>
+      </div>
+      <div class="hero-trust">
+        <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>先验收后付款</div>
+        <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>小工具 1-3 天交付</div>
+        <div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>交付附使用说明</div>
+      </div>
+    </div>
+    <div class="demo-panel">
+      <h3>批量重命名 · 在线体验</h3>
+      <p class="sub">把文件列表和规则粘进去，立刻看到效果</p>
+      <div class="field">
+        <label for="hero-files">文件名列表（一行一个）</label>
+        <textarea id="hero-files" rows="4">周报2026.xlsx
+合同模板.docx
+客户名单.csv</textarea>
+      </div>
+      <div class="field">
+        <label for="hero-rule">重命名规则（{i} 序号，{name} 原名）</label>
+        <input id="hero-rule" value="2026-08-{i}-{name}">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="heroRename()">生成预览</button>
+      <div class="demo-out" id="hero-out">点击「生成预览」查看结果</div>
+    </div>
+  </div>
+</header>
+
+<section id="services">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">SERVICES</div>
+      <h2>我能帮你做什么</h2>
+      <p>都是能落地、能验收的活，交付的是工具本身和一份说明。</p>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg></div>
+        <h3>Excel / CSV 批量处理</h3>
+        <p>合并、拆分、去重、清洗、按模板生成报表，几百个文件一次跑完。</p>
+        <span class="tag">最常见需求</span>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></div>
+        <h3>网页信息采集</h3>
+        <p>公开信息的批量抓取与整理，比如商品、新闻、公告、公开联系方式。</p>
+        <span class="tag">只接合规数据</span>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg></div>
+        <h3>企业微信 / 钉钉机器人</h3>
+        <p>定时提醒、消息推送、日报自动生成，让关键信息自己找上门。</p>
+        <span class="tag">团队提效</span>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></div>
+        <h3>文档批量生成</h3>
+        <p>合同、报价单、通知按模板批量生成，字段自动填充，几秒钟出全部。</p>
+        <span class="tag">模板 + 变量</span>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <h3>表单 / 后台 / 小网站</h3>
+        <p>报名表、预约系统、内部工具站，简单需求也能快速交付。</p>
+        <span class="tag">按需求定制</span>
+      </div>
+      <div class="card">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></div>
+        <h3>流程自动化串联</h3>
+        <p>把多个重复环节串起来：数据进来、处理完、自动通知，全程不用人盯。</p>
+        <span class="tag">省时最多</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">FOR WHOM</div>
+      <h2>适合谁</h2>
+      <p>每天被重复操作占掉时间的人，都值得把活交给脚本。</p>
+    </div>
+    <div class="audience">
+      <div class="aud"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><b>电商运营</b><span>订单、表格、上下架</span></div>
+      <div class="aud"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1"/><path d="M14 9h1"/><path d="M9 13h1"/><path d="M14 13h1"/><path d="M9 17h1"/><path d="M14 17h1"/></svg></div><b>财务</b><span>对账、报表、凭证</span></div>
+      <div class="aud"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><b>HR / 行政</b><span>合同、通知、名单</span></div>
+      <div class="aud"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg></div><b>自媒体</b><span>素材整理、数据汇总</span></div>
+      <div class="aud"><div class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><path d="m3.3 7 8.7 5 8.7-5"/></svg></div><b>小团队</b><span>内部提效工具</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="process">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">PROCESS</div>
+      <h2>怎么合作</h2>
+      <p>流程固定，每一步都有交付物，不玩虚的。</p>
+    </div>
+    <div class="steps">
+      <div class="step"><h3>说需求</h3><p>你描述要解决的问题，最好写下来：输入什么、期望输出什么。</p></div>
+      <div class="step"><h3>报价确认</h3><p>我判断工作量并报价，确认范围和交付标准后再开工。</p></div>
+      <div class="step"><h3>开发交付</h3><p>按约定时间交付工具和说明，小工具一般 1-3 天。</p></div>
+      <div class="step"><h3>验收修改</h3><p>你验收，免费修改 2 轮，确认后付尾款，完事。</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="pricing">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">PRICING</div>
+      <h2>价格参考</h2>
+      <p>先聊需求再报价，以下只是参考区间，最终以确认的需求为准。</p>
+    </div>
+    <div class="pricing">
+      <div class="price">
+        <h3>小工具</h3>
+        <div class="amount">200 - 800 <span>元</span></div>
+        <p style="font-size:13px;color:var(--muted);margin:0">单个脚本或小工具，边界清晰</p>
+        <ul>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Excel / 文件批量处理</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>模板批量生成文档</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>1-3 天交付</li>
+        </ul>
+      </div>
+      <div class="price hot">
+        <h3>中等项目</h3>
+        <div class="amount">800 - 3000 <span>元</span></div>
+        <p style="font-size:13px;color:var(--muted);margin:0">需要多个环节或在线化的工具</p>
+        <ul>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>企业微信 / 钉钉机器人</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>表单 / 预约 / 内部小站</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>数据采集整理管道</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>3-7 天交付</li>
+        </ul>
+      </div>
+      <div class="price">
+        <h3>复杂定制</h3>
+        <div class="amount">3000+ <span>元 / 面议</span></div>
+        <p style="font-size:13px;color:var(--muted);margin:0">需求复杂、周期较长的项目</p>
+        <ul>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>多系统数据打通</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>完整工具站 / 后台</li>
+          <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>按周拆分里程碑交付</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">LIVE DEMO</div>
+      <h2>演示工具，先试再聊</h2>
+      <p>下面三个工具都是浏览器里直接跑的，点两下就能体验这类工具的交付效果。</p>
+    </div>
+    <div class="toolbox">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" aria-selected="true" data-tab="rename">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          批量重命名
+        </button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="docgen">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+          合同批量生成
+        </button>
+        <button class="tab" role="tab" aria-selected="false" data-tab="csv">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><rect width="18" height="18" x="3" y="3" rx="2"/></svg>
+          CSV 整理
+        </button>
+      </div>
+
+      <div class="tab-panel active" id="panel-rename">
+        <p class="tool-desc">粘进文件名列表，写一条规则，立刻看到新旧对照，还能直接下载 Windows 或 Mac 的脚本。</p>
+        <div class="tool-grid">
+          <div>
+            <div class="field">
+              <label for="rn-files">文件名列表（一行一个，含扩展名）</label>
+              <textarea id="rn-files" rows="6">销售报表-华东.xlsx
+销售报表-华南.xlsx
+销售报表-华北.xlsx
+合同-张三.pdf</textarea>
+            </div>
+            <div class="field">
+              <label for="rn-rule">规则（{i} 序号，{name} 原名去掉扩展名，{ext} 扩展名）</label>
+              <input id="rn-rule" value="2026-08-{i}-{name}.{ext}">
+            </div>
+            <div class="tool-actions">
+              <button class="btn btn-primary btn-sm" onclick="doRename()">生成对照</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadRename('bat')">下载 .bat</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadRename('sh')">下载 .sh</button>
+            </div>
+            <div class="hint">.bat 给 Windows 用，.sh 给 Mac 用。文件要放在同一个文件夹里再运行。</div>
+          </div>
+          <div>
+            <div class="result-box" id="rn-out"><span class="empty">填写左侧内容后点「生成对照」</span></div>
+            <div class="count-line" id="rn-count"></div>
+            <div class="warn-line" id="rn-warn"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-docgen">
+        <p class="tool-desc">模板里用 {{字段名}} 占位，下面每行是一条数据，一键生成全部文档。</p>
+        <div class="tool-grid">
+          <div>
+            <div class="field">
+              <label for="dg-tpl">模板</label>
+              <textarea id="dg-tpl" rows="6">入职通知
+
+{{name}} 你好：
+你已通过面试，请于 {{date}} 携带 {{docs}} 到公司办理入职。
+联系人：{{hr}}</textarea>
+            </div>
+            <div class="field">
+              <label for="dg-data">数据（第一行是字段名，逗号分隔）</label>
+              <textarea id="dg-data" rows="5">name,date,docs,hr
+张三,2026年9月1日,身份证+学历证,李经理
+李四,2026年9月3日,身份证,王经理</textarea>
+            </div>
+            <div class="tool-actions">
+              <button class="btn btn-primary btn-sm" onclick="doDocgen()">生成</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadDocs()">下载全部</button>
+            </div>
+          </div>
+          <div>
+            <div class="result-box" id="dg-out"><span class="empty">填写模板和数据后点「生成」</span></div>
+            <div class="warn-line" id="dg-warn"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="panel-csv">
+        <p class="tool-desc">粘一段带表头的 CSV（支持逗号、Tab、分号），去重、筛选、排序一步到位。</p>
+        <div class="tool-grid">
+          <div>
+            <div class="field">
+              <label for="csv-data">CSV 内容</label>
+              <textarea id="csv-data" rows="6">姓名,城市,订单数
+张三,上海,12
+李四,北京,8
+王五,上海,5
+张三,上海,12</textarea>
+            </div>
+            <div class="row">
+              <select id="csv-op">
+                <option value="dedupe">按列去重</option>
+                <option value="filter">筛选包含关键词</option>
+                <option value="sort">按列排序</option>
+              </select>
+              <select id="csv-col"></select>
+              <input id="csv-keyword" placeholder="关键词" style="width:120px;border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:13px">
+              <button class="btn btn-primary btn-sm" onclick="doCsv()">整理</button>
+              <button class="btn btn-ghost btn-sm" onclick="downloadCsv()">下载结果</button>
+            </div>
+            <div class="hint">去重和排序需要选一列；筛选会匹配整行。</div>
+          </div>
+          <div>
+            <div class="result-box" id="csv-out"><span class="empty">粘贴数据后点「整理」</span></div>
+            <div class="count-line" id="csv-count"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="contact" style="border-bottom:0">
+  <div class="wrap">
+    <div class="contact-band">
+      <div>
+        <h2>有需求？先把你的问题说清楚</h2>
+        <p>输入什么、想要什么结果、大概多少量，这三件事说清就能报价。</p>
+        <div class="contact-item" style="margin-top:14px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          微信号：<b>QBZ2382368047</b>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="copyWechat()">复制微信号</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  把重复的活儿交给脚本 · 服务展示页
+</footer>
+
+<script>
+  // ===== 使用前配置 =====
+  var CONTACT_WECHAT = "QBZ2382368047";
+
+  // ===== 导航 / 页签 =====
+  document.querySelectorAll(".tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (t) {
+        t.setAttribute("aria-selected", t === tab ? "true" : "false");
+      });
+      document.querySelectorAll(".tab-panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === "panel-" + tab.dataset.tab);
+      });
+    });
+  });
+
+  function copyWechat() {
+    if (CONTACT_WECHAT === "你的微信号") {
+      alert("请先在页面源码里把微信号改成你自己的（搜 CONTACT_WECHAT）。");
+      return;
+    }
+    navigator.clipboard.writeText(CONTACT_WECHAT).then(function () {
+      alert("微信号已复制：" + CONTACT_WECHAT);
+    });
+  }
+
+  // ===== 工具：重命名 =====
+  function parseRename() {
+    var files = document.getElementById("rn-files").value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    var rule = document.getElementById("rn-rule").value;
+    var rows = [], errors = [];
+    var seen = {};
+    files.forEach(function (f, idx) {
+      var dot = f.lastIndexOf(".");
+      var name = dot > 0 ? f.slice(0, dot) : f;
+      var ext = dot > 0 ? f.slice(dot + 1) : "";
+      var next = rule
+        .replace(/\{i\}/g, String(idx + 1))
+        .replace(/\{name\}/g, name)
+        .replace(/\{ext\}/g, ext);
+      if (seen[next]) errors.push("重名：" + next);
+      seen[next] = true;
+      rows.push([f, next]);
+    });
+    return { rows: rows, errors: errors };
+  }
+
+  function renderRename(rows, errors) {
+    var out = document.getElementById("rn-out");
+    if (!rows.length) { out.innerHTML = '<span class="empty">没有可处理的文件</span>'; }
+    else {
+      var html = "<table><tr><th>原名</th><th>新名</th></tr>";
+      rows.forEach(function (r) { html += "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td></tr>"; });
+      html += "</table>";
+      out.innerHTML = html;
+    }
+    document.getElementById("rn-count").textContent = "共 " + rows.length + " 个文件";
+    document.getElementById("rn-warn").textContent = errors.join("；");
+    return rows;
+  }
+
+  function doRename() { renderRename(parseRename().rows, parseRename().errors); }
+
+  function renameScript(kind) {
+    var r = parseRename();
+    var lines = r.rows.map(function (x) {
+      return kind === "bat"
+        ? 'ren "' + x[0] + '" "' + x[1] + '"'
+        : 'mv "' + x[0] + '" "' + x[1] + '"';
+    });
+    var header = kind === "bat"
+      ? "@echo off\r\nchcp 65001 >nul\r\nrem 请把此文件放到要重命名的文件所在文件夹\r\n"
+      : "#!/bin/bash\n# 请把此脚本放到要重命名的文件所在文件夹，然后执行 bash 本文件名\n";
+    return header + lines.join(kind === "bat" ? "\r\n" : "\n");
+  }
+
+  function downloadRename(kind) {
+    var r = parseRename();
+    if (!r.rows.length) { alert("没有可生成的内容"); return; }
+    var blob = new Blob([renameScript(kind)], { type: "text/plain;charset=utf-8" });
+    saveBlob(blob, kind === "bat" ? "批量重命名.bat" : "批量重命名.sh");
+  }
+
+  // ===== 工具：合同批量生成 =====
+  function doDocgen() {
+    var tpl = document.getElementById("dg-tpl").value;
+    var raw = document.getElementById("dg-data").value.trim();
+    var lines = raw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    var out = document.getElementById("dg-out");
+    if (!tpl || lines.length < 2) { out.innerHTML = '<span class="empty">模板和数据都要填</span>'; return; }
+
+    var sep = lines[0].indexOf("\t") >= 0 ? "\t" : ",";
+    var headers = lines[0].split(sep).map(function (s) { return s.trim(); });
+    var docs = [], missing = [];
+    lines.slice(1).forEach(function (line, i) {
+      var vals = line.split(sep);
+      var map = {};
+      headers.forEach(function (h, j) { map[h] = (vals[j] || "").trim(); });
+      var text = tpl.replace(/\{\{\s*([\u4e00-\u9fa5\w]+)\s*\}\}/g, function (m, key) {
+        if (map[key] === undefined) { missing.push("第" + (i + 2) + "行缺字段 " + key); return m; }
+        return map[key];
+      });
+      var rest = text.match(/\{\{\s*[\u4e00-\u9fa5\w]+\s*\}\}/g);
+      if (rest) missing.push("第" + (i + 2) + "份还有未替换：" + rest.join(" "));
+      docs.push({ name: "文档" + (i + 1), text: text });
+    });
+
+    var html = "";
+    docs.forEach(function (d, i) {
+      html += "<div style='margin-bottom:14px'><b>文档" + (i + 1) + "</b><pre style='white-space:pre-wrap;background:#f1f2f4;border-radius:6px;padding:10px;font-size:12px;margin:6px 0 0'>" + esc(d.text) + "</pre></div>";
+    });
+    out.innerHTML = docs.length ? html : '<span class="empty">没有数据行</span>';
+    document.getElementById("dg-warn").textContent = missing.slice(0, 8).join("；");
+    window._docs = docs;
+  }
+
+  function downloadDocs() {
+    if (!window._docs || !window._docs.length) { alert("先点「生成」"); return; }
+    var body = window._docs.map(function (d, i) {
+      return "===== 文档" + (i + 1) + " =====\n\n" + d.text;
+    }).join("\n\n");
+    saveBlob(new Blob([body], { type: "text/plain;charset=utf-8" }), "批量生成文档.txt");
+  }
+
+  // ===== 工具：CSV 整理 =====
+  function parseCsv() {
+    var raw = document.getElementById("csv-data").value;
+    var lines = raw.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!lines.length) return null;
+    var sep = lines[0].indexOf("\t") >= 0 ? "\t" : (lines[0].split(";").length > lines[0].split(",").length ? ";" : ",");
+    var rows = lines.map(function (l) { return l.split(sep).map(function (c) { return c.trim(); }); });
+    var width = Math.max.apply(null, rows.map(function (r) { return r.length; }));
+    rows.forEach(function (r) { while (r.length < width) r.push(""); });
+    return { header: rows[0], rows: rows.slice(1) };
+  }
+
+  function refreshCsvCols() {
+    var data = parseCsv();
+    var sel = document.getElementById("csv-col");
+    sel.innerHTML = "";
+    if (!data) return;
+    data.header.forEach(function (h, i) {
+      var opt = document.createElement("option");
+      opt.value = i;
+      opt.textContent = h || ("第" + (i + 1) + "列");
+      sel.appendChild(opt);
+    });
+  }
+
+  function doCsv() {
+    var data = parseCsv();
+    var out = document.getElementById("csv-out");
+    if (!data || !data.rows.length) { out.innerHTML = '<span class="empty">没有可处理的数据</span>'; return; }
+    var op = document.getElementById("csv-op").value;
+    var col = parseInt(document.getElementById("csv-col").value, 10);
+    var kw = document.getElementById("csv-keyword").value.trim();
+    var rows = data.rows.slice();
+
+    if (op === "dedupe") {
+      var seen = {};
+      rows = rows.filter(function (r) {
+        var key = r[col];
+        if (seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+    } else if (op === "filter") {
+      if (!kw) { alert("先填筛选关键词"); return; }
+      rows = rows.filter(function (r) { return r.join(" ").indexOf(kw) >= 0; });
+    } else if (op === "sort") {
+      rows.sort(function (a, b) {
+        var x = parseFloat(a[col]), y = parseFloat(b[col]);
+        if (!isNaN(x) && !isNaN(y)) return x - y;
+        return String(a[col]).localeCompare(String(b[col]), "zh-CN");
+      });
+    }
+
+    window._csvResult = [data.header].concat(rows);
+    var html = "<table><tr>" + data.header.map(function (h) { return "<th>" + esc(h) + "</th>"; }).join("") + "</tr>";
+    rows.slice(0, 60).forEach(function (r) {
+      html += "<tr>" + r.map(function (c) { return "<td>" + esc(c) + "</td>"; }).join("") + "</tr>";
+    });
+    html += "</table>";
+    out.innerHTML = rows.length ? html : '<span class="empty">筛选后没有数据</span>';
+    document.getElementById("csv-count").textContent = "处理后 " + rows.length + " 行" + (rows.length > 60 ? "（仅预览前 60 行）" : "");
+  }
+
+  function downloadCsv() {
+    if (!window._csvResult) { alert("先点「整理」"); return; }
+    var body = window._csvResult.map(function (r) { return r.join(","); }).join("\n");
+    saveBlob(new Blob(["\ufeff" + body], { type: "text/csv;charset=utf-8" }), "整理结果.csv");
+  }
+
+  // ===== 通用 =====
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function saveBlob(blob, name) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+
+  // ===== 首页小演示 =====
+  function heroRename() {
+    var files = document.getElementById("hero-files").value.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    var rule = document.getElementById("hero-rule").value;
+    var lines = files.map(function (f, i) {
+      var dot = f.lastIndexOf(".");
+      var name = dot > 0 ? f.slice(0, dot) : f;
+      var ext = dot > 0 ? f.slice(dot + 1) : "";
+      return rule.replace(/\{i\}/g, String(i + 1)).replace(/\{name\}/g, name).replace(/\{ext\}/g, ext);
+    });
+    document.getElementById("hero-out").textContent = lines.join("\n");
+  }
+
+  document.getElementById("csv-data").addEventListener("input", refreshCsvCols);
+  refreshCsvCols();
+</script>
+</body>
+</html>
